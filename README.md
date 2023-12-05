@@ -1,2 +1,2 @@
-# ft_trancendence
-ft_trancendence 통합판
+# ft_transcendence
+ft_transcendence 통합판
