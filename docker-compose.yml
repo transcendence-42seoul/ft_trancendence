@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  srv-postgres:
+    container_name: postgres
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    volumes:
+      - vol-postgres:/var/lib/postgresql/data
+    networks:
+      - net-transcendence
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+
+  srv-backend:
+    container_name: backend
+    image: backend:1.0
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    networks:
+      - net-transcendence
+    volumes:
+      - vol-profiles:/app/profiles
+    depends_on:
+      - srv-postgres
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      FRONT_SERVER_URL: ${FRONT_SERVER_URL}
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+
+  srv-frontend:
+    container_name: frontend
+    image: frontend:1.0
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    volumes:
+      - vol-react_app:/app/dist
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_SERVER_URL: ${VITE_SERVER_URL}
+
+networks:
+  net-transcendence:
+    name: transcendence
+
+volumes:
+  vol-postgres:
+    name: postgres
+
+  vol-react_app:
+    name: react_app
+
+  vol-images:
+    name: images
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/share/images
+
+  vol-profiles:
+    name: profiles
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/share/profiles
