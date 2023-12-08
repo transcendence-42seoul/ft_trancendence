@@ -16,6 +16,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_HOST: ${POSTGRES_HOST}
 
   srv-backend:
     container_name: backend
@@ -23,6 +24,10 @@ services:
     build:
       context: ./back
       dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
     networks:
       - net-transcendence
     volumes:
@@ -35,6 +40,7 @@ services:
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+      POSTGRES_HOST: ${POSTGRES_HOST}
 
   srv-frontend:
     container_name: frontend
@@ -46,14 +52,17 @@ services:
       - vol-react_app:/app/dist
     ports:
       - "5173:5173"
-    expose:
-      - "5173"
+    # expose:
+    #   - "5173"
+    networks:
+      - net-transcendence
     environment:
       VITE_SERVER_URL: ${VITE_SERVER_URL}
 
 networks:
   net-transcendence:
-    name: transcendence
+    name: net-transcendence
+    driver: bridge
 
 volumes:
   vol-postgres:

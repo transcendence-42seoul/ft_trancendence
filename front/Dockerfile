@@ -12,7 +12,7 @@ RUN npm install -g npm@8.19.2
 RUN npm install -g npm-check-updates
 RUN ncu -u
 
-EXPOSE 5173
+# EXPOSE 5173
 
 # Install any needed packages specified in requirements.txt
 RUN npm install

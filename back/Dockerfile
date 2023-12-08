@@ -26,3 +26,4 @@ COPY app/tsconfig.json .
 
 # RUN npm run build
 ENTRYPOINT npm run start:dev
+# CMD ["npm", "run", "start:dev"]
