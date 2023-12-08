@@ -27,6 +27,8 @@ COPY app/tsconfig.json .
 COPY app/tsconfig.node.json .
 COPY app/tailwind.config.js .
 COPY app/vite.config.ts .
+COPY app/postcss.config.js .
 
-# RUN npm run build
-ENTRYPOINT npm run dev
+RUN npm run build
+# ENTRYPOINT npm run dev
+CMD ["npm", "run", "dev", "--", "--host"]
