@@ -53,10 +53,11 @@ export class ChatParticipantService {
     // ban (check with chat)
     await this.checkBan(userIdx, chatIdx);
     // block (check with blocker)
-    await this.checkBlock(userIdx, chatIdx);
+    // await this.checkBlock(userIdx, chatIdx);
 
-    if (!(await bcrypt.compare(password, chat.password)))
+    if (!(await bcrypt.compare(password, chat.password))) {
       throw new NotFoundException(`Password is incorrect`);
+    }
 
     if (chat.currentParticipant >= chat.limit)
       throw new BadRequestException(`Chat with idx "${chatIdx}" is full`);
@@ -83,22 +84,20 @@ export class ChatParticipantService {
       where: { chat: { idx: chatIdx } },
       relations: ['banned'],
     });
-    // console.log('bannedParticipant', bannedParticipant);
 
     const isBanned = bannedParticipant.some(
       (ban) => ban.banned.idx === userIdx,
     );
-    console.log('isBanned', isBanned);
     if (isBanned) {
       throw new BadRequestException(
         `User "${userIdx}" are banned in this chat`,
       );
     }
     // block (check with blocker)
-    const owner = await this.chatParticipantRepository.findOne({
-      where: { chat: { idx: chatIdx }, role: Role.OWNER },
-      relations: ['user'],
-    });
+    // const owner = await this.chatParticipantRepository.findOne({
+    //   where: { chat: { idx: chatIdx }, role: Role.OWNER },
+    //   relations: ['user'],
+    // });
 
     const participant = await this.chatParticipantRepository.findOne({
       where: { user: { idx: userIdx }, chat: { idx: chatIdx } },
@@ -108,12 +107,12 @@ export class ChatParticipantService {
         `User with idx "${userIdx}" already joined chat with idx "${chatIdx}"`,
       );
 
-    const blockByOwner = owner.user.blocker;
-    for (let i = 0; i < blockByOwner.length; i++) {
-      if (blockByOwner[i].blocked === user.idx) {
-        throw new BadRequestException(`You are blocked by owner`);
-      }
-    }
+    // const blockByOwner = owner.user.blocker;
+    // for (let i = 0; i < blockByOwner.length; i++) {
+    //   if (blockByOwner[i].blocked === user.idx) {
+    //     throw new BadRequestException(`You are blocked by owner`);
+    //   }
+    // }
 
     if (chat.currentParticipant >= chat.limit)
       throw new BadRequestException(`Chat with idx "${chatIdx}" is full`);
@@ -146,12 +145,27 @@ export class ChatParticipantService {
     }));
   }
 
-  async getChatOwner(chatIdx: number): Promise<ChatParticipant[]> {
+  async isParticipant(chatIdx: number, userIdx: number): Promise<boolean> {
+    const chat = await this.chatRepository.findOne({ where: { idx: chatIdx } });
+    if (!chat)
+      throw new NotFoundException(`Chat with idx "${chatIdx}" not found`);
+    const user = await this.userRepository.findOne({ where: { idx: userIdx } });
+    if (!user)
+      throw new NotFoundException(`User with idx "${userIdx}" not found`);
+
+    const participant = await this.chatParticipantRepository.findOne({
+      where: { chat: { idx: chatIdx }, user: { idx: userIdx } },
+    });
+    if (participant) return true;
+    return false;
+  }
+
+  async getChatOwner(chatIdx: number): Promise<ChatParticipant> {
     const chat = await this.chatRepository.findOne({ where: { idx: chatIdx } });
     if (!chat)
       throw new NotFoundException(`Chat with idx "${chatIdx}" not found`);
 
-    return await this.chatParticipantRepository.find({
+    return await this.chatParticipantRepository.findOne({
       where: { chat: { idx: chatIdx }, role: Role.OWNER },
       relations: ['user'],
     });

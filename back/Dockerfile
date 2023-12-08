@@ -24,6 +24,5 @@ COPY app/nest-cli.json .
 COPY app/tsconfig.build.json .
 COPY app/tsconfig.json .
 
-
 # RUN npm run build
-ENTRYPOINT npm run start
+ENTRYPOINT npm run start:dev

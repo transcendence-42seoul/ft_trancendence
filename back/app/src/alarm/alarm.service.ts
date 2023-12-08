@@ -6,6 +6,7 @@ import { AlarmDto } from './dto/alarm.dto';
 import { NotFoundException } from '@nestjs/common';
 import { Alarm } from './alarm.entity';
 import { BadRequestException } from '@nestjs/common';
+import { BlockService } from 'src/block/block.service';
 
 @Injectable()
 export class AlarmService {
@@ -14,6 +15,7 @@ export class AlarmService {
     private alarmRepository: AlarmRepository,
     @InjectRepository(UserRepository)
     private userRepository: UserRepository,
+    private blockService: BlockService,
   ) {}
 
   async createAlarm(userIdx: number, alarmDto: AlarmDto): Promise<Alarm> {
@@ -33,14 +35,26 @@ export class AlarmService {
         sender_idx: alarmDto.sender_idx,
       },
     });
-    console.log('alarm', alarm);
     if (alarm) throw new BadRequestException('이미 알람이 존재합니다.');
+
+    const blockList = await this.blockService.getBlockList(userIdx);
+    const blockIdxList = blockList.map((block) => block.idx);
+
+    const blockedIdxList = await this.blockService.getBlockedList(userIdx);
+
+    if (
+      blockIdxList.includes(alarmDto.sender_idx) ||
+      blockedIdxList.includes(alarmDto.sender_idx)
+    ) {
+      throw new BadRequestException('차단한 유저입니다.');
+    }
 
     return this.alarmRepository.createAlarm(
       receiver,
-      alarmDto.sender_idx, // 보내는 사람
+      alarmDto.sender_idx,
       alarmDto.content,
       alarmDto.type,
+      alarmDto.room_idx, // 보내는 사람
     );
   }
 
@@ -68,7 +82,6 @@ export class AlarmService {
   }
 
   async deleteAlarm(alarmIdx: number) {
-    console.log('deleteAlarm');
     const alarm = await this.alarmRepository.findOne({
       where: { idx: alarmIdx },
     });

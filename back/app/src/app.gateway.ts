@@ -60,7 +60,7 @@ export class appGateway
     } catch (error) {
       this.logger.error(`${userIdx}의 offline 업데이트 실패`);
     }
-    this.logger.log('disconnected : ' + socket.id + ' in appGateway');
+    this.logger.log('disconnected : ' + socket.id + ' in appGateway' + userIdx);
 
     const onlineUserListPromises = Object.keys(onlineUsers).map(async (key) => {
       const user = await this.userService.findByIdx(parseInt(key));
@@ -134,7 +134,7 @@ export class appGateway
           throw new BadRequestException('차단된 사용자입니다.');
         }
       } catch (error) {
-        console.log(error);
+        this.logger.error(error.message);
         socket.emit('checkEnableChallengeGameSuccess', {
           status: 'OFFLINE',
           success: false,
@@ -181,7 +181,7 @@ export class appGateway
         });
       }
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(error.message);
     }
   }
 
@@ -283,12 +283,12 @@ export class appGateway
           .emit('notification', alarmDto);
       }
     } catch (error) {
-      console.log(error);
+      this.logger.error(error.message);
     }
   }
 
   @SubscribeMessage('acceptFriendRequest')
-  async acceptFirendRequest(
+  async acceptFriendRequest(
     @MessageBody() notificationIdx: number,
     @ConnectedSocket() socket: Socket,
   ) {
@@ -313,7 +313,11 @@ export class appGateway
         AlarmType.GENERAL,
       );
 
-      await this.alarmService.createAlarm(notification.sender_idx, alarmDto);
+      const alarm = await this.alarmService.createAlarm(
+        notification.sender_idx,
+        alarmDto,
+      );
+      alarmDto.idx = alarm.idx;
 
       if (onlineUsers[notification.sender_idx].id) {
         this.server
@@ -333,8 +337,48 @@ export class appGateway
           .to(onlineUsers[requestedIdx].id)
           .emit('notificationList', alarmDtos);
       }
+
+      const requestedFriendList =
+        await this.friendService.getFriendList(requestedIdx);
+      const requestedFriendDtos = requestedFriendList.map((friend) => {
+        return {
+          idx: friend.idx,
+          nickname: friend.nickname,
+          profileImage: friend.avatar.image_data,
+        };
+      });
+
+      const senderFriendList = await this.friendService.getFriendList(
+        notification.sender_idx,
+      );
+      const senderFriendDtos = senderFriendList.map((friend) => {
+        return {
+          idx: friend.idx,
+          nickname: friend.nickname,
+          profileImage: friend.avatar.image_data,
+        };
+      });
+
+      if (onlineUsers[requestedIdx].id) {
+        this.server
+          .to(onlineUsers[requestedIdx].id)
+          .emit('updateFriendList', requestedFriendDtos);
+
+        this.server
+          .to(onlineUsers[requestedIdx].id)
+          .emit('receiveFriendUsers', requestedFriendDtos);
+      }
+      if (onlineUsers[notification.sender_idx].id) {
+        this.server
+          .to(onlineUsers[notification.sender_idx].id)
+          .emit('updateFriendList', senderFriendDtos);
+
+        this.server
+          .to(onlineUsers[notification.sender_idx].id)
+          .emit('receiveFriendUsers', senderFriendDtos);
+      }
     } catch (error) {
-      console.log(error);
+      this.logger.error(error.message);
     }
   }
 
@@ -367,7 +411,47 @@ export class appGateway
           .emit('notificationList', alarmDtos);
       }
     } catch (error) {
-      console.log(error);
+      this.logger.error(error.message);
+    }
+  }
+
+  @SubscribeMessage('deleteFriend')
+  async deleteFriend(@MessageBody() body, @ConnectedSocket() socket: Socket) {
+    const userIdx = socket.data.userIdx;
+    const friendIdx = body.managedIdx;
+
+    try {
+      await this.friendService.deleteFriend(userIdx, friendIdx);
+    } catch (error) {
+      this.logger.error(error.message);
+    }
+
+    const friendList = await this.friendService.getFriendList(userIdx);
+    const friendDtos = friendList.map((friend) => {
+      return {
+        idx: friend.idx,
+        nickname: friend.nickname,
+        profileImage: friend.avatar.image_data,
+      };
+    });
+
+    if (onlineUsers[userIdx].id) {
+      this.server
+        .to(onlineUsers[userIdx].id)
+        .emit('updateFriendList', friendDtos);
+
+      this.server
+        .to(onlineUsers[userIdx].id)
+        .emit('receiveFriendUsers', friendDtos);
+    }
+    if (onlineUsers[friendIdx].id) {
+      this.server
+        .to(onlineUsers[friendIdx].id)
+        .emit('updateFriendList', friendDtos);
+
+      this.server
+        .to(onlineUsers[friendIdx].id)
+        .emit('receiveFriendUsers', friendDtos);
     }
   }
 
@@ -412,11 +496,11 @@ export class appGateway
         `${sender.nickname}님이 DM을 보냈습니다.`,
         AlarmType.DM,
       );
+      alarmDto.room_idx = room_id;
 
       const alarm = await this.alarmService.createAlarm(receiverIdx, alarmDto);
 
       alarmDto.idx = alarm.idx;
-      alarmDto.room_idx = room_id;
 
       if (onlineUsers[receiverIdx].id) {
         this.server
@@ -424,7 +508,7 @@ export class appGateway
           .emit('notification', alarmDto);
       }
     } catch (error) {
-      console.log(error);
+      this.logger.error(error.message);
     }
   }
 
@@ -453,71 +537,76 @@ export class appGateway
           .emit('notificationList', alarmDtos);
       }
     } catch (error) {
-      console.log(error);
+      this.logger.error(error.message);
     }
   }
 
   @SubscribeMessage('block')
   async block(@MessageBody() body, @ConnectedSocket() socket: Socket) {
-    // const chatIdx = parseInt(body.chatIdx);
-    // const room = `room-${chatIdx}`;
     const blockerIdx = socket.data.userIdx;
     const blockedIdx = body.managedIdx;
-    console.log('1', blockerIdx, blockedIdx);
 
     try {
-      console.log('2', blockerIdx, blockedIdx);
       await this.blockService.blockUser(blockerIdx, blockedIdx);
-      console.log('3', blockerIdx, blockedIdx);
 
       const friendList = await this.friendService.getFriendList(blockerIdx);
-      const isFriend = friendList.some((friend) => friend.idx === blockedIdx);
+      const isFriend = friendList.some(
+        (friend) => friend.idx === parseInt(blockedIdx),
+      );
+      this.logger.error(isFriend);
       if (isFriend) {
         await this.friendService.deleteFriend(blockerIdx, blockedIdx);
       }
 
-      const blockedUsers = await this.blockService.getBlockList(blockerIdx);
-
-      // const onlineUserListPromises = Object.keys(onlineUsers).map(
-      //   const userIdx = parseInt(key);
-
-      //   async (key) => {
-      //     if (blockedUsers.some(parseInt(key))) {
-      //       return null; // 차단된 사용자는 제외
-      //     }
-      //     const user = await this.userService.findByIdx(parseInt(key));
-      //     return {
-      //       idx: parseInt(key),
-      //       nickname: user.nickname,
-      //     };
-      //   },
-      // );
-      const onlineUserListPromises = Object.keys(onlineUsers).map(
-        async (key) => {
-          const userIdx = parseInt(key);
-          if (isNaN(userIdx)) {
-            // userIdx가 유효한 숫자가 아닌 경우 처리
-            return null;
-          }
-
-          if (blockedUsers.some((user) => user.idx === userIdx)) {
-            // 차단된 사용자는 제외
-            return null;
-          }
-
-          const user = await this.userService.findByIdx(userIdx);
+      if (onlineUsers[blockerIdx].id) {
+        const blockerFriendList =
+          await this.friendService.getFriendList(blockerIdx);
+        const blockerFriendDtos = blockerFriendList.map((friend) => {
           return {
-            idx: userIdx,
-            nickname: user.nickname,
+            idx: friend.idx,
+            nickname: friend.nickname,
+            profileImage: friend.avatar.image_data,
           };
-        },
-      );
+        });
+        this.server
+          .to(onlineUsers[blockerIdx].id)
+          .emit('updateFriendList', blockerFriendDtos);
+      }
 
-      const onlineUserList = await Promise.all(onlineUserListPromises);
-      this.server.emit('onlineUsers', onlineUserList);
-      // this.server.to(room).emit('block', blockedIdx);
+      if (onlineUsers[blockedIdx].id) {
+        const blockedFriendList =
+          await this.friendService.getFriendList(blockedIdx);
+        const blockedFriendDtos = blockedFriendList.map((friend) => {
+          return {
+            idx: friend.idx,
+            nickname: friend.nickname,
+            profileImage: friend.avatar.image_data,
+          };
+        });
+        this.server
+          .to(onlineUsers[blockedIdx].id)
+          .emit('updateFriendList', blockedFriendDtos);
+      }
     } catch (error) {
-      console.log(error);
+      this.logger.error(error.message);
     }
+  }
+
+  @SubscribeMessage('unblock')
+  async unblock(@MessageBody() body, @ConnectedSocket() socket: Socket) {
+    // const chatIdx = parseInt(body.chatIdx);
+    // const room = `room-${chatIdx}`;
+    const blockerIdx = socket.data.userIdx;
+    const blockedIdx = body.managedIdx;
+
+    try {
+      await this.blockService.unBlockUser(blockerIdx, blockedIdx);
+    } catch (error) {
+      this.logger.error(error.message);
+    }
+
+    const blockedUsers = await this.blockService.getBlockList(blockerIdx);
+
+    this.server.emit('receiveblockedUsers', blockedUsers);
   }
 }

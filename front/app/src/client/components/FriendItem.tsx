@@ -21,6 +21,7 @@ export const FriendItem = (props: FriendItemProps) => {
       onContextMenu={(e) => onContextMenu(e, friend)}
     >
       <span>{friend.nickname}</span>
+      <span>{friend.status}</span>
     </div>
   );
 };
@@ -47,7 +48,7 @@ export const FriendContextMenu = (props: FriendContextMenuProps) => {
     onDelete,
     onBlock,
     closeContextMenu,
-    challengModalState
+    challengModalState,
   } = props;
 
   const navigateToDm = DmNavigation();
@@ -76,17 +77,19 @@ export const FriendContextMenu = (props: FriendContextMenuProps) => {
           onClick={() => {
             closeContextMenu();
             onBlock(friendIdx);
-            challengModalState.onOpen();
           }}
         >
           차단
         </li>
-        <li className="p-2 hover:bg-gray-100 cursor-pointer"
-onClick={() => {
-  closeContextMenu();
-  challengModalState.onOpen();
-}}
-        >챌린지</li>
+        <li
+          className="p-2 hover:bg-gray-100 cursor-pointer"
+          onClick={() => {
+            closeContextMenu();
+            challengModalState.onOpen();
+          }}
+        >
+          챌린지
+        </li>
         {showDmOption && (
           <li
             className="p-2 hover:bg-gray-100 cursor-pointer"

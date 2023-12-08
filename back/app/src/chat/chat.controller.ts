@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Res,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat } from './chat.entity';
@@ -97,6 +98,14 @@ export class ChatController {
     return await this.chatParticipantService.getChatParticipants(chatIdx);
   }
 
+  @Get('/participant/:chatIdx/:userIdx')
+  async isParticipant(
+    @Param('chatIdx', ParseIntPipe) chatIdx: number,
+    @Param('userIdx', ParseIntPipe) userIdx: number,
+  ): Promise<boolean> {
+    return await this.chatParticipantService.isParticipant(chatIdx, userIdx);
+  }
+
   @Delete('/:idx')
   async deleteChat(@Param('idx', ParseIntPipe) idx: number): Promise<void> {
     await this.chatService.deleteChat(idx);
@@ -117,5 +126,19 @@ export class ChatController {
     @Body('content') content: string,
   ): Promise<ChatMessage> {
     return this.chatMessageService.createChatMessage(chatIdx, userIdx, content);
+  }
+
+  @Get('/ban/:chatIdx/:userIdx')
+  async getIsBanned(
+    @Param('chatIdx', ParseIntPipe) chatIdx: number,
+    @Param('userIdx', ParseIntPipe) userIdx: number,
+    @Res() res,
+  ) {
+    try {
+      await this.chatParticipantService.checkBan(chatIdx, userIdx);
+      res.status(200).send(false);
+    } catch (error) {
+      res.status(200).send(true);
+    }
   }
 }

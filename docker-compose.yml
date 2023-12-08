@@ -46,6 +46,8 @@ services:
       - vol-react_app:/app/dist
     ports:
       - "5173:5173"
+    expose:
+      - "5173"
     environment:
       VITE_SERVER_URL: ${VITE_SERVER_URL}
 

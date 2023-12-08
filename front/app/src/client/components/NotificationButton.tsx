@@ -37,16 +37,15 @@ function NotificationButton(props: NotificationButtonProps) {
       const notifications = await axios.get(
         `${import.meta.env.VITE_SERVER_URL}/alarms/${userIdx}`,
       );
-      console.log('notifications', notifications);
       const formattedNotifications = notifications.data.map(
         (notification: INotification) => ({
           idx: notification.idx,
           sender_idx: notification.sender_idx,
           content: notification.content,
+          room_idx: notification.room_idx,
           type: notification.type,
         }),
       );
-      console.log('formattedNotifications', formattedNotifications);
       setNotifications(formattedNotifications);
     } catch (error) {
       console.log(error);
@@ -54,7 +53,6 @@ function NotificationButton(props: NotificationButtonProps) {
   };
 
   const addNotification = (notification: INotification) => {
-    console.log('notify!', notification);
     setNotifications((prevNotifications) => [
       ...prevNotifications,
       notification,
@@ -62,12 +60,16 @@ function NotificationButton(props: NotificationButtonProps) {
   };
 
   useEffect(() => {
+    fetchNotificationList();
+  }, []);
+
+  useEffect(() => {
     appSocket.on('notification', addNotification);
     appSocket.on('notificationList', (notifications: INotification[]) => {
       setNotifications(notifications);
     });
 
-    fetchNotificationList();
+    // fetchNotificationList();
 
     return () => {
       appSocket.off('notification');
@@ -88,14 +90,11 @@ function NotificationButton(props: NotificationButtonProps) {
 
   const handleDeclineFriendRequest = (e: React.MouseEvent, idx: number) => {
     e.stopPropagation();
-    console.log('handleDeclineFriendRequest', idx);
     appSocket.emit('declineFriendRequest', idx);
   };
 
   const handleGeneral = (e: React.MouseEvent, notification: INotification) => {
     e.stopPropagation();
-    // removeNotification(notification.idx);
-    // navigate(`/dm/${notification.sender_idx}`);
     appSocket.emit('generalNotification', notification.idx);
   };
 
@@ -107,7 +106,6 @@ function NotificationButton(props: NotificationButtonProps) {
 
   const getNotificationButtons = (notification: INotification) => {
     if (notification.type === 'friend_request') {
-      console.log('sdf', notification);
       return [
         {
           label: 'Accept',

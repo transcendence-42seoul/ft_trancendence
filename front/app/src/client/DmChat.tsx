@@ -114,7 +114,6 @@ function DmPage() {
       if (userIdx > 0) {
         try {
           const friendsData = await FecthFriendList(userIdx);
-          console.log('friendsData = ', friendsData);
           setFriendsList(friendsData);
         } catch (error) {
           console.error('Error fetching friends list:', error);
@@ -133,7 +132,6 @@ function DmPage() {
   const onClickChannelLeave = (room_id: string | undefined) => {
     chatSocket.emit('leaveDm', room_id);
     chatSocketLeave();
-
     navigate('/main');
   };
 
@@ -253,10 +251,12 @@ function DmPage() {
     }
   };
 
-  const handleBlockChatMember = () => {
-    console.log('block!');
+  const handleBlockChatMember = (chatMemberIdx: number) => {
+    appSocket.emit('block', {
+      managedIdx: chatMemberIdx,
+    });
+    alert('차단했습니다.');
   };
-
   const handleDeleteFriend = (friendId: number) => {
     setFriendsList(friendsList.filter((friend) => friend.idx !== friendId));
   };
@@ -268,7 +268,6 @@ function DmPage() {
   const handleFriendRequest = (receiverIdx: number) => {
     appSocket.emit('friendRequest', receiverIdx);
   };
-
 
   const {
     isOpen: isCreateChallengeOpen,
@@ -371,7 +370,9 @@ function DmPage() {
                           currentDmUserIdx={memberData.idx}
                           position={contextMenu.position}
                           onBlock={handleBlockChatMember}
-                          onFriendRequest={() => handleFriendRequest(contextMenu.user.idx)}
+                          onFriendRequest={() =>
+                            handleFriendRequest(contextMenu.user.idx)
+                          }
                           closeContextMenu={() => closeContextMenu()}
                           challengModalState={{
                             isOpen: isCreateChallengeOpen,
@@ -399,16 +400,15 @@ function DmPage() {
                           }}
                         />
                       ))}
-                          <CreateChallengeModal
-                requestedIdx={challengeUserIdx}
-                modalState={{
-                  isOpen: isCreateChallengeOpen,
-                  onOpen: onOpenCreateChallenge,
-                  onClose: onCloseCreateChallenge,
-                }}
-              />
+                <CreateChallengeModal
+                  requestedIdx={challengeUserIdx}
+                  modalState={{
+                    isOpen: isCreateChallengeOpen,
+                    onOpen: onOpenCreateChallenge,
+                    onClose: onCloseCreateChallenge,
+                  }}
+                />
               </div>
-
             </div>
           </div>
         </div>

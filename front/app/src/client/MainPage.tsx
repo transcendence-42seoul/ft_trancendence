@@ -6,14 +6,17 @@ import { UserContextMenu, UserItem } from './components/UserItem';
 import { FriendContextMenu, FriendItem } from './components/FriendItem';
 import UtilButton from './components/UtilButton';
 import NotificationButton from './components/NotificationButton';
-import { chatSocket, chatSocketConnect } from './mini_chat/chat.socket';
+import {
+  chatSocket,
+  chatSocketConnect,
+  chatSocketLeave,
+} from './mini_chat/chat.socket';
 import axios from 'axios';
 import { FetchUserData } from './components/FetchUserData';
 import { getCookie } from '../common/cookie/cookie';
 import { FecthFriendList, Friends } from './components/FetchFriendList';
 import { ChatItem, IChatRoom, PasswordModal } from './components/ChatItem';
 import { appSocket } from '../common/socket/app.socket';
-// import { appSocket } from '../common/socket/app.socket';
 import { CreateChallengeModal } from './modal/CreateChallengeModal/CreateChallengeModal';
 
 interface IContextMenu {
@@ -92,17 +95,30 @@ function MainPage() {
 
   useEffect(() => {
     const fetchFriendList = async () => {
-      if (userIdx > 0) {
-        try {
-          const friendsData = await FecthFriendList(userIdx);
-          setFriendsList(friendsData);
-        } catch (error) {
-          console.error('Error fetching friends list:', error);
-        }
+      if (userIdx <= 0) return;
+      try {
+        const friendsData = await FecthFriendList(userIdx);
+        setFriendsList(friendsData);
+      } catch (error) {
+        console.error('Error fetching friends list:', error);
       }
     };
 
     fetchFriendList();
+
+    appSocket.on('updateFriendList', (friends) => {
+      const formattedFriends = friends.map((friend: Friends) => {
+        return {
+          ...friend,
+          isHighlighted: false,
+        };
+      });
+      setFriendsList(formattedFriends);
+    });
+
+    return () => {
+      appSocket.off('updateFriendList');
+    };
   }, [userIdx]);
 
   useEffect(() => {
@@ -119,24 +135,6 @@ function MainPage() {
       appSocket.off('onlineUsers');
     };
   }, [appSocket]);
-
-  // useEffect(() => {
-  //   const handleIsBan = (data: any) => {
-  //     console.log('sdfsdfd');
-  //     console.log('handleisBan', data, data.isBan, data.room_id);
-  //     if (data.isBan) {
-  //       alert('차단된 사용자입니다.');
-  //     } else {
-  //       navigate(`/chat/${data.room_id}`);
-  //     }
-  //   };
-
-  //   appSocket.on('isBan', handleIsBan);
-
-  //   return () => {
-  //     appSocket.off('isBan', handleIsBan);
-  //   };
-  // }, [appSocket]);
 
   const onChatRoomAdded = () => {
     setChatRoomAdded(true);
@@ -158,26 +156,37 @@ function MainPage() {
       onOpenPasswordModal();
     } else {
       chatSocketConnect();
-
-      //   joinChat 이벤트 보내기
-      //   chatSocket.emit('joinChat', {
-      //     room_id: chatRoom.idx,
-      //     password: chatRoom.password,
-      //   });
-
-      navigate(`/chat/${chatRoom.idx}`);
+      chatSocket.emit(
+        'joinChat',
+        {
+          room_id: chatRoom.idx,
+        },
+        (response: any) => {
+          if (response.status === 'success') {
+            navigate(`/chat/${chatRoom.idx}`);
+          }
+        },
+      );
     }
   };
 
   const handleJoinPrivateChat = (chatRoom: IChatRoom, password: string) => {
     chatSocketConnect();
-
-    // chatSocket.emit('joinChat', {
-    //   room_id: chatRoom.idx,
-    //   password: password,
-    // });
-
-    navigate(`/chat/${chatRoom.idx}`);
+    chatSocket.emit(
+      'joinChat',
+      {
+        room_id: chatRoom.idx,
+        password,
+      },
+      (response: any) => {
+        if (response.status === 'success') {
+          navigate(`/chat/${chatRoom.idx}`);
+        } else if (response.message === 'Password is incorrect') {
+          alert(response.message);
+          chatSocketLeave();
+        }
+      },
+    );
   };
 
   const renderPasswordModal = () => {
@@ -296,6 +305,7 @@ function MainPage() {
 
   useEffect(() => {
     const fetchChatRooms = async () => {
+      console.log('fetchChatRooms');
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_SERVER_URL}/chats/private-public`,
@@ -304,6 +314,7 @@ function MainPage() {
           ...chatRoom,
           isHighlighted: false,
         }));
+        console.log('chatRoomsData', chatRoomsData);
         setChatRooms(chatRoomsData);
       } catch (error) {
         console.error('채팅방 데이터를 가져오는데 실패했습니다:', error);
@@ -348,6 +359,8 @@ function MainPage() {
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
 
+      chatSocket.off('acceptPrivateChat');
+      chatSocket.off('showPasswordError');
       appSocket.off('chatRoomCreated');
       appSocket.off('chatRoomUpdated');
       appSocket.off('chatRoomDeleted');
@@ -355,15 +368,21 @@ function MainPage() {
   }, [chatRoomAdded, contextMenuRef, closeContextMenu]);
 
   const handleDeleteFriend = (friendIdx: number) => {
-    setFriendsList(friendsList.filter((friend) => friend.idx !== friendIdx));
+    appSocket.emit('deleteFriend', {
+      managedIdx: friendIdx,
+    });
   };
 
   const handleBlockFriend = (friendIdx: number) => {
-    setFriendsList(friendsList.filter((friend) => friend.idx !== friendIdx));
+    appSocket.emit('block', {
+      managedIdx: friendIdx,
+    });
   };
 
   const handleBlockOnline = (onlineIdx: number) => {
-    setOnlineList(onlineList.filter((online) => online.idx !== onlineIdx));
+    appSocket.emit('block', {
+      managedIdx: onlineIdx,
+    });
   };
 
   const handleSettingsClick = () => {
@@ -371,7 +390,6 @@ function MainPage() {
   };
 
   const handleFriendRequest = (receiverIdx: number) => {
-    console.log('handleFriendRequest', receiverIdx);
     appSocket.emit('friendRequest', receiverIdx);
   };
 

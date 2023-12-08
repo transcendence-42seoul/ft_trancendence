@@ -1,14 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChatRepository } from './chat.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from 'src/user/user.repository';
 import { ChatParticipantRepository } from './chat.participant.repository';
 import { Chat, ChatType } from './chat.entity';
 import { Socket } from 'socket.io';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChatService {
@@ -41,7 +38,6 @@ export class ChatService {
   }
 
   async createPublic(idx: number, name: string, limit: number): Promise<Chat> {
-    console.log(idx, name, limit);
     if (!name) throw new NotFoundException('Name is required');
 
     const user = await this.userRepository.findOne({ where: { idx } });
@@ -62,7 +58,9 @@ export class ChatService {
       chat.password = null;
     } else {
       chat.type = ChatType.PRIVATE;
-      chat.password = password;
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(password, salt);
+      chat.password = hashedPassword;
     }
 
     try {
@@ -111,20 +109,6 @@ export class ChatService {
     if (!user2)
       throw new NotFoundException(`User with idx "${idx2}" not found`);
 
-    const blockByUser1 = user1.blocker;
-    for (let i = 0; i < blockByUser1.length; i++) {
-      if (blockByUser1[i].blocked === user2.idx) {
-        throw new BadRequestException(`You are blocked`);
-      }
-    }
-
-    const blockByUser2 = user2.blocker;
-    for (let i = 0; i < blockByUser2.length; i++) {
-      if (blockByUser2[i].blocked === user1.idx) {
-        throw new BadRequestException(`You are blocked`);
-      }
-    }
-
     const DMChat = await this.chatRepository
       .createQueryBuilder('chat')
       .innerJoin('chat.participants', 'participant')
@@ -160,6 +144,5 @@ export class ChatService {
 
   leaveChatRoom(socket: Socket, roomId: string) {
     socket.leave(roomId);
-    console.log('leave idx', roomId);
   }
 }

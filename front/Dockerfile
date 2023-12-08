@@ -29,4 +29,4 @@ COPY app/tailwind.config.js .
 COPY app/vite.config.ts .
 
 # RUN npm run build
-ENTRYPOINT npm run build
+ENTRYPOINT npm run dev
