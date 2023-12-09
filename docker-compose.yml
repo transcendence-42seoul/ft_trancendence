@@ -27,8 +27,9 @@ services:
       - "3000"
     networks:
       - net-transcendence
-    volumes:
-      - vol-profiles:/app/profiles
+    network_mode: "host"
+    # volumes:
+    #   - vol-profiles:/share/profiles
     depends_on:
       - srv-postgres
     env_file:
@@ -48,13 +49,13 @@ services:
     #   - "5173"
     networks:
       - net-transcendence
+    network_mode: "host"
     env_file:
       - .env
 
 networks:
   net-transcendence:
     name: net-transcendence
-    driver: bridge
 
 volumes:
   vol-postgres:
@@ -63,18 +64,18 @@ volumes:
   vol-react_app:
     name: react_app
 
-  vol-images:
-    name: images
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/share/images
+  # vol-images:
+  #   name: images
+  #   driver: local
+  #   driver_opts:
+  #     type: none
+  #     o: bind
+  #     device: ${PWD}/share/images
 
-  vol-profiles:
-    name: profiles
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/share/profiles
+  # vol-profiles:
+  #   name: profiles
+  #   driver: local
+  #   driver_opts:
+  #     type: none
+  #     o: bind
+  #     device: ${PWD}/share/profiles
