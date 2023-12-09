@@ -25,9 +25,7 @@ fclean:		clean
 			- docker rm front
 			- docker rm back
 			- docker rm postgres
-			- docker rmi frontend
-			- docker rmi backend
-			- docker rmi postgres
+			- docker compose down --volumes --rmi all
 			- docker volume rm postgres
 			- docker volume rm profiles
 			- docker volume rm react_app
