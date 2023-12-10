@@ -62,7 +62,7 @@ function AuthenticationPage() {
   const verifyTFA = async () => {
     if (inputs.every((input) => input.length === 1)) {
       try {
-        await axios.post(
+        const response = await axios.post(
           `${import.meta.env.VITE_SERVER_URL}/auth/tfa/${userIdx}/verify`,
           { token: tfaCode },
           {
