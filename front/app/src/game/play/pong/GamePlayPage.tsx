@@ -10,26 +10,28 @@ import {
 } from '../../../recoil/gameAtom';
 import { gameSocket } from '../../socket/game.socket';
 import ResultComponent from './ResultComponent';
+import { IGame } from '../../ready/GameReadyPage';
 
 interface GamePlayPageProps {
   myId: string;
+  gameData: IGame;
 }
 
 function GamePlayPage(props: GamePlayPageProps) {
-  const game = useRecoilValue(GameAtom);
-  const host = useRecoilValue(GameHostInfoSelector);
-  const guest = useRecoilValue(GameguestInfoSelector);
+  const game = props.gameData;
+  const host = game.__game_host__;
+  const guest = game.__game_guest__;
 
   const userA_avatar = {
-    idx: host.idx,
-    name: host.id,
-    imageData: host.avatar.image_data.data,
+    idx: host?.idx,
+    name: host?.id,
+    imageData: host?.avatar.image_data.data,
   };
 
   const userB_avatar = {
-    idx: guest.idx,
-    name: guest.id,
-    imageData: guest.avatar.image_data.data,
+    idx: guest?.idx,
+    name: guest?.id,
+    imageData: guest?.avatar.image_data.data,
   };
 
   const [gameEndState, setGameEndState] = useState(false);
@@ -52,16 +54,20 @@ function GamePlayPage(props: GamePlayPageProps) {
       <div className="w-full flex h-[85%] justify-center">
         <div className="w-full lg:w-8/12 h-full mx-5">
           <div className="flex bg-sky-200 h-[8rem] justify-evenly rounded-md">
-            <SmallUserProfile
-              mode={mode}
-              avatarData={userA_avatar}
-              recordData={host.record}
-            />
-            <SmallUserProfile
-              mode={mode}
-              avatarData={userB_avatar}
-              recordData={guest.record}
-            />
+            {host && guest && (
+              <>
+                <SmallUserProfile
+                  mode={mode}
+                  avatarData={userA_avatar}
+                  recordData={host.record}
+                />
+                <SmallUserProfile
+                  mode={mode}
+                  avatarData={userB_avatar}
+                  recordData={guest.record}
+                />
+              </>
+            )}
           </div>
           <div
             className={`w-ful h-[calc(100%-8rem)] bg-sky-100 rounded-bl-md rounded-br-md flex justify-center items-center`}
@@ -71,6 +77,7 @@ function GamePlayPage(props: GamePlayPageProps) {
                 player={props.myId === userA_avatar.name ? 'Host' : 'Guest'}
                 setGameEndState={setGameEndState}
                 setWinner={setWinner}
+                roomId={game.room_id}
               />
             ) : (
               <ResultComponent

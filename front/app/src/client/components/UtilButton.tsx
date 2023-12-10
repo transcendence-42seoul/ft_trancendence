@@ -184,6 +184,7 @@ export const UtilButton = (props: UtilButtonProps) => {
           Authorization: `Bearer ${token}`,
         },
       });
+      if (res.data === null) throw new Error('No game');
       setGameInfo(res.data);
       return res.data;
     } catch (error) {

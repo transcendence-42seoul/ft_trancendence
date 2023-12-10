@@ -130,10 +130,10 @@ function MyProfile() {
     const logs = await axios.get(
       `${import.meta.env.VITE_SERVER_URL}/records/${idx}`,
     );
-    const histories = logs.data.user_game_log.map((log: string) => {
+    const histories = logs.data.user_game_log?.map((log: string) => {
       return JSON.parse(log);
     });
-    setGameHistory(histories.reverse());
+    setGameHistory(histories?.reverse());
   };
 
   // 승률을 나타내는 원의 둘레 계산

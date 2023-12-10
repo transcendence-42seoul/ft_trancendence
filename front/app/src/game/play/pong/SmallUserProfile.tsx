@@ -37,21 +37,20 @@ function SmallUserProfile(props: SmallUserProfileProps) {
   }
 
   // ArrayBuffer를 이용하여 Blob 생성
-  const arrayBufferView = new Uint8Array(props.avatarData.imageData);
-  const blob = new Blob([arrayBufferView], { type: 'image/jpeg' });
+  let imageUrl = '';
+  try {
+    const arrayBufferView = new Uint8Array(props.avatarData.imageData);
+    const blob = new Blob([arrayBufferView], { type: 'image/jpeg' });
 
-  // Blob을 Data URL로 변환
-  const imageUrl = URL.createObjectURL(blob);
+    // Blob을 Data URL로 변환
+    imageUrl = URL.createObjectURL(blob);
+  } catch (e) {
+    imageUrl = './cuteyatta.png';
+  }
 
   return (
     <div className="flex items-center	">
-      <Avatar
-        size="lg"
-        name="Segun Adebayo"
-        src={
-          props.avatarData.imageData.length === 0 ? './cuteyatta.png' : imageUrl
-        }
-      />
+      <Avatar size="lg" name="Segun Adebayo" src={imageUrl} />
       <div className="ml-3">
         <h1 className="font-bold text-xl">{avatarData.name}</h1>
         <h2 className="font-medium text-base">{record}</h2>
