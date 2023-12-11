@@ -45,9 +45,9 @@ function AvatarSetting() {
     onClose();
   };
 
-  const updateNickname = () => {
+  const updateNickname = async () => {
     try {
-      axios.patch(
+      await axios.patch(
         `${import.meta.env.VITE_SERVER_URL}/users/${userIdx}/nickname`,
         { nickname: nickname },
         {
@@ -56,6 +56,7 @@ function AvatarSetting() {
           },
         },
       );
+      navigate('/main');
     } catch (error) {
       console.log(error);
     }
@@ -63,7 +64,6 @@ function AvatarSetting() {
 
   const handleCompleteProfileSetup = () => {
     updateNickname();
-    navigate('/main');
   };
 
   const handleCheckNickname = () => {

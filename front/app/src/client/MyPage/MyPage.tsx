@@ -197,7 +197,23 @@ function MyProfile() {
   };
 
   const handleSaveUsername = async () => {
-    fetch(`${import.meta.env.VITE_SERVER_URL}/users/${userIdx}/nickname`, {
+    if (newNickname.trim() === '') {
+      setIsEditingNickname(false);
+      alert('닉네임을 입력해주세요.');
+      return;
+    }
+
+    const checkNicknameResponse = await axios.get(
+      `${import.meta.env.VITE_SERVER_URL}/users/check-nickname/${newNickname}`
+    );
+
+    if (checkNicknameResponse.data === false) {
+      setIsEditingNickname(false);
+      alert('이미 사용 중인 사용자 이름입니다.');
+      return;
+    }
+
+    await fetch(`${import.meta.env.VITE_SERVER_URL}/users/${userIdx}/nickname`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
