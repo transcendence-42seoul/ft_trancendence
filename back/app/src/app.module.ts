@@ -36,8 +36,7 @@ import { appGateway } from './app.gateway';
     MuteModule,
   ],
   controllers: [AppController],
-  providers: [AppService, appGateway],
-  
+  providers: [AppService, appGateway],  
   exports: [appGateway],
 })
 export class AppModule {}

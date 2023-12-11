@@ -315,11 +315,8 @@ export class GameGateway
 
       this.gameUsers[hostData.idx]?.join(game.room_id);
       this.gameUsers[guestData.idx]?.join(game.room_id);
-      console.log(hostData.idx, guestData.idx);
       await this.userService.updateStatus(hostData.idx, UserStatus.PLAYING);
       await this.userService.updateStatus(guestData.idx, UserStatus.PLAYING);
-      console.log(game);
-      console.log(game.game_host);
 
       game.game_host.status = UserStatus.PLAYING;
       game.game_guest.status = UserStatus.PLAYING;

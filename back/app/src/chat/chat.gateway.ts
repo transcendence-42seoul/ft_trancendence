@@ -292,11 +292,9 @@ export class ChatGateway
         for (const socketId of keys) {
           const eachUserIdx = this.chatUsers[socketId];
           if (eachUserIdx !== userIdx) {
-            console.log('->', eachUserIdx, socketId);
             this.server.to(socketId).emit('ownerLeaveChat', chatIdx);
           }
         }
-        //
         this.AppGateway.server.emit('chatRoomDeleted', chatIdx);
         await this.chatService.deleteChat(chatIdx);
       }

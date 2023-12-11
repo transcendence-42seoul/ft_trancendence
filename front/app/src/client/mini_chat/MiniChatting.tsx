@@ -97,7 +97,6 @@ function MiniChatting(props: MiniChattingProps) {
   };
 
   const handleReceiveChat = (chat: IChat) => {
-    console.log('chat', chat);
     if (chat.content === '') return;
     if (idx !== undefined && chat.room_idx !== parseInt(idx)) return;
     const message = makeIChatMessage(chat);
