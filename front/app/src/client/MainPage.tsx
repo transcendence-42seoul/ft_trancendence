@@ -129,6 +129,7 @@ function MainPage() {
         isHighlighted: false,
       }));
       setOnlineList(formattedUsers);
+      fetchOnlineList();
     });
 
     return () => {

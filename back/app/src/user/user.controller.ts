@@ -113,6 +113,6 @@ export class UserController {
 
   @Get('/online')
   async getOnlineUsers(): Promise<OnlineUserDto[]> {
-    return this.userService.getOnlineUsers();
+    return await this.userService.getOnlineUsers();
   }
 }

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import axios from 'axios';
 import { getCookie } from '../common/cookie/cookie';
 
-const defaultAvatar = 'src/assets/logo.jpg'; // 기본 프로필 이미지 경로
+const defaultAvatar = 'src/assets/transcendence_owner.jpg'; // 기본 프로필 이미지 경로
 
 function AvatarSetting() {
   const token = getCookie('token');

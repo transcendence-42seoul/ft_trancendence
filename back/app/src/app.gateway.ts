@@ -69,9 +69,7 @@ export class appGateway
         nickname: user.nickname,
       };
     });
-
     const onlineUserList = await Promise.all(onlineUserListPromises);
-
     this.server.emit('onlineUsers', onlineUserList);
   }
 
@@ -111,7 +109,6 @@ export class appGateway
     });
 
     const onlineUserList = await Promise.all(onlineUserListPromises);
-
     this.server.emit('onlineUsers', onlineUserList);
   }
 
@@ -328,7 +325,9 @@ export class appGateway
           .emit('notification', alarmDto);
       }
 
+      console.log('acceptFriendRequest before');
       await this.alarmService.deleteAlarm(notificationIdx);
+      console.log('acceptFriendRequest after');
 
       const alarms = await this.alarmService.getAlarms(requestedIdx);
       const alarmDtos = alarms.map((alarm) => {

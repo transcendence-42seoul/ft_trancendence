@@ -253,6 +253,8 @@ function SettingPage() {
     appSocket.emit('logout');
     appSocket.disconnect();
     Cookies.remove('token');
+    localStorage.clear();
+    sessionStorage.clear();
     navigate('/login');
     onCloseLogoutModal();
   };

@@ -20,7 +20,7 @@ export class GameController {
       if (game === null) throw new Error();
       res.status(200).send(game);
     } catch (error) {
-      res.status(401).send('game 정보가 없습니다.');
+      res.status(200).send('game 정보가 없습니다.');
     }
   }
 
@@ -34,7 +34,7 @@ export class GameController {
       if (game === null) throw new Error();
       res.status(200).send(game);
     } catch (error) {
-      res.status(401).send('game 정보가 없습니다.');
+      res.status(200).send('game 정보가 없습니다.');
     }
   }
 }

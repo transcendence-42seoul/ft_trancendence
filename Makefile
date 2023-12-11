@@ -1,9 +1,8 @@
-DATA_PATH = ${PWD}/
+DATA_PATH = ${PWD}
 ENV_FILE := .env
 all :
 	mkdir -p $(DATA_PATH)/share/images
 	mkdir -p $(DATA_PATH)/share/profiles
-	# docker compose up --build -d
 	docker compose  --env-file $(ENV_FILE) up --build
 
 up:
