@@ -99,11 +99,11 @@ export class ChatMessageService {
     chatIdx: number,
     userIdx: number,
   ): Promise<ChatMessage[]> {
-    const chat = await this.chatRepository.findOne({ where: { idx: chatIdx } });
+    const chat = await this.chatRepository.count({ where: { idx: chatIdx } });
     if (!chat) {
       throw new NotFoundException(`Chat with idx "${chatIdx}" not found`);
     }
-    const user = await this.userRepository.findOne({ where: { idx: userIdx } });
+    const user = await this.userRepository.count({ where: { idx: userIdx } });
     if (!user) {
       throw new NotFoundException(`User with idx "${userIdx}" not found`);
     }

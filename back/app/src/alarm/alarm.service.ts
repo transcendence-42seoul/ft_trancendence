@@ -24,12 +24,12 @@ export class AlarmService {
     });
     if (!receiver) throw new NotFoundException('유저가 존재하지 않습니다.');
 
-    const sender = await this.userRepository.findOne({
+    const sender = await this.userRepository.count({
       where: { idx: alarmDto.sender_idx },
     });
     if (!sender) throw new NotFoundException('유저가 존재하지 않습니다.');
 
-    const alarm = await this.alarmRepository.findOne({
+    const alarm = await this.alarmRepository.count({
       where: {
         receiver: { idx: userIdx },
         sender_idx: alarmDto.sender_idx,
@@ -65,7 +65,7 @@ export class AlarmService {
     if (!receiver) throw new NotFoundException('유저가 존재하지 않습니다.');
 
     const alarms = await this.alarmRepository.find({
-      where: { receiver: { idx: receiver.idx } },
+      where: { receiver: { idx: userIdx } },
     });
     return alarms;
   }
