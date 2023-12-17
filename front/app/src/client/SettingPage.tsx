@@ -15,11 +15,12 @@ import {
   ModalOverlay,
   useDisclosure,
 } from '@chakra-ui/react';
-import { appSocket } from '../common/socket/app.socket';
+import { appSocket, appSocketDisconnect } from '../common/socket/app.socket';
 import Cookies from 'js-cookie';
 import { getCookie } from '../common/cookie/cookie';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { chatSocketLeave } from './mini_chat/chat.socket';
 
 interface TfaEnableModalProps {
   isOpen: boolean;
@@ -262,6 +263,10 @@ function SettingPage() {
   const handleWithdrawalConfirm = () => {
     appSocket.emit('withdrawal');
     Cookies.remove('token');
+    appSocketDisconnect();
+    localStorage.clear();
+    sessionStorage.clear();
+    chatSocketLeave();
     navigate('/login');
     onCloseWithdrawalModal();
   };
