@@ -1,8 +1,6 @@
 DATA_PATH = ${PWD}
 ENV_FILE := .env
 all :
-	mkdir -p $(DATA_PATH)/share/images
-	mkdir -p $(DATA_PATH)/share/profiles
 	docker compose  --env-file $(ENV_FILE) up --build
 
 up:
@@ -18,9 +16,7 @@ down:
 clean:	down
 
 fclean:		clean
-			# rm -rf $(DATA_PATH)/share/images/*
-			# rm -rf $(DATA_PATH)/share/profiles/*
-			# docker system prune -a --volumes
+			- docker system prune -a --volumes
 			- docker rm front
 			- docker rm back
 			- docker rm postgres
