@@ -48,6 +48,10 @@ export class GameGateway
   ) {}
   private logger = new Logger('games');
 
+  gameUsers: {
+    [key: number]: Socket;
+  } = {};
+
   clearSocketInAllQueue(socket: Socket) {
     const normalIndex = NormalWaitingQueue.findIndex((element) => {
       return element[0] === socket;
@@ -63,7 +67,12 @@ export class GameGateway
     }
   }
 
-  handleDisconnect(@ConnectedSocket() socket: Socket) {
+  async handleDisconnect(@ConnectedSocket() socket: Socket) {
+    const token = socket.handshake.auth.token;
+    const userData = await this.authService.parsingJwtData(token);
+    const userIdx = userData.user_idx;
+
+    delete this.gameUsers[userIdx];
     // queue에서 나가기
     let index = NormalWaitingQueue.findIndex((element) => {
       return element[0] === socket;
@@ -96,12 +105,13 @@ export class GameGateway
       if (!data) {
         throw new UnauthorizedException('Unauthorized access');
       }
+      this.gameUsers[data.user_idx] = socket;
+      const game = await this.gameService.getUseGameShortInfo(data.user_idx);
 
-      const game = await this.gameService.getUserGame(data.user_idx);
       if (game) {
         socket.join(game.room_id);
       }
-      if (game) this.logger.log('connected : ' + socket.id);
+      this.logger.log('connected : ' + socket.id + ' ' + data.user_idx);
     } catch (error) {
       socket.emit('error', error.message);
       socket.disconnect();
@@ -133,7 +143,7 @@ export class GameGateway
       if (body.mode === 'normal') {
         NormalWaitingQueue.push([socket, data.user_idx]);
         if (NormalWaitingQueue.length >= 2) {
-          await this.createMatch(
+          await this.createMatchWithoutReady(
             GameMode.LADDER_NORMAL,
             {
               socket: NormalWaitingQueue[0][0],
@@ -149,7 +159,7 @@ export class GameGateway
       } else if (body.mode === 'hard') {
         HardWaitingQueue.push([socket, data.user_idx]);
         if (HardWaitingQueue.length >= 2) {
-          this.createMatch(
+          this.createMatchWithoutReady(
             GameMode.LADDER_HARD,
             {
               socket: HardWaitingQueue[0][0],
@@ -213,7 +223,7 @@ export class GameGateway
       },
     };
     try {
-      await this.createMatch(
+      await this.createMatchWithoutReady(
         gameStatus.gameMode,
         gameStatus.hostData,
         gameStatus.guestData,
@@ -223,7 +233,7 @@ export class GameGateway
     }
   }
 
-  async createMatch(
+  async createMatchWithReady(
     gameMode: GameModeType,
     hostData: {
       socket: Socket;
@@ -249,22 +259,72 @@ export class GameGateway
       });
       hostData.socket.emit('createGameSuccess', game);
       guestData.socket.emit('createGameSuccess', game);
-
+      this.gameUsers[hostData.idx]?.join(game.room_id);
+      this.gameUsers[guestData.idx]?.join(game.room_id);
       let count = COUNT_DOWN_TIME;
       this.server.to(game.room_id).emit('countDown', count);
       const countDownInterval = setInterval(async () => {
         count--;
+        this.gameUsers[hostData.idx]?.join(game.room_id);
+        this.gameUsers[guestData.idx]?.join(game.room_id);
         this.server.to(game.room_id).emit('countDown', count);
         if (count === 0) {
           clearInterval(countDownInterval);
-          this.start(game.room_id, gameMode);
+          delete this.gameUsers[hostData.idx];
+          delete this.gameUsers[guestData.idx];
           await this.userService.updateStatus(hostData.idx, UserStatus.PLAYING);
           await this.userService.updateStatus(
             guestData.idx,
             UserStatus.PLAYING,
           );
+          this.start(game.room_id, gameMode);
         }
       }, 1000);
+      this.logger.log(
+        `create game ${hostData.idx}, ${guestData.idx} in ${game.room_id}`,
+      );
+    } catch (error) {
+      throw Error("can't create game");
+    }
+  }
+
+  async createMatchWithoutReady(
+    gameMode: GameModeType,
+    hostData: {
+      socket: Socket;
+      idx: number;
+    },
+    guestData: {
+      socket: Socket;
+      idx: number;
+    },
+  ) {
+    try {
+      if (
+        hostData === undefined ||
+        guestData === undefined ||
+        hostData.idx === guestData.idx
+      ) {
+        throw new UnauthorizedException('Unauthorized access');
+      }
+      const game = await this.gameService.createGame({
+        game_mode: gameMode,
+        gameHost: hostData.idx,
+        gameGuest: guestData.idx,
+      });
+
+      this.gameUsers[hostData.idx]?.join(game.room_id);
+      this.gameUsers[guestData.idx]?.join(game.room_id);
+      await this.userService.updateStatus(hostData.idx, UserStatus.PLAYING);
+      await this.userService.updateStatus(guestData.idx, UserStatus.PLAYING);
+
+      game.game_host.status = UserStatus.PLAYING;
+      game.game_guest.status = UserStatus.PLAYING;
+      hostData.socket.emit('createGameSuccess', game);
+      guestData.socket.emit('createGameSuccess', game);
+      this.gameUsers[hostData.idx]?.emit('startGame');
+      this.gameUsers[guestData.idx]?.emit('startGame');
+      this.start(game.room_id, gameMode);
       this.logger.log(
         `create game ${hostData.idx}, ${guestData.idx} in ${game.room_id}`,
       );
@@ -279,7 +339,7 @@ export class GameGateway
     }
     this.logger.log(`${roomId} game start!`);
     GameStore[roomId] = new CGame(false, gameMode);
-    this.server.emit('gameData', GameStore[roomId]);
+    this.server.emit('getGameData', GameStore[roomId]);
 
     GameStore[roomId].intervalId = setInterval(
       () => this.update(roomId),
@@ -312,23 +372,6 @@ export class GameGateway
     }
   }
 
-  acceptChallengeMatch(
-    @MessageBody() body: JoinRoomDto,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.gameService.joinGameRoom(socket, body.room_id);
-    this.logger.log(socket.id + ' join in ' + body.room_id);
-  }
-
-  @SubscribeMessage('joinGame')
-  joinGame(
-    @MessageBody() body: JoinRoomDto,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.gameService.joinGameRoom(socket, body.room_id);
-    this.logger.log(socket.id + ' join in ' + body.room_id);
-  }
-
   @SubscribeMessage('keyEvent')
   keyEvent(@MessageBody() body: KyeEventDto) {
     const roomId = body.room_id;
@@ -338,9 +381,10 @@ export class GameGateway
     else if (cur_key == 'keyDown') direction = DIRECTION.DOWN;
     else if (cur_key == 'keyIdle') direction = DIRECTION.IDLE;
 
-    if (body.identity === 'Host') GameStore[roomId].setHostMove(direction);
+    if (!roomId) return;
+    if (body.identity === 'Host') GameStore[roomId]?.setHostMove(direction);
     else if (body.identity === 'Guest')
-      GameStore[roomId].setGuestMove(direction);
+      GameStore[roomId]?.setGuestMove(direction);
   }
 
   @SubscribeMessage('endGame')

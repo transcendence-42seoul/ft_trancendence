@@ -20,7 +20,7 @@ export class AuthService {
   async getTokenFrom42(code: string): Promise<any> {
     const clientId = process.env.FORTYTWO_CLIENT_ID;
     const clientSecret = process.env.FORTYTWO_CLIENT_SECRET;
-    const redirectUrl = `http://localhost:3000/auth/oauth/42/callback`;
+    const redirectUrl = `${process.env.VITE_SERVER_URL}/auth/oauth/42/callback`;
 
     const tokenUrl = `https://api.intra.42.fr/oauth/token`;
 

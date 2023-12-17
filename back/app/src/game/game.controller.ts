@@ -12,14 +12,29 @@ export class GameController {
 
   // 현재 내가 참가하고 있는 게임의 정보 얻기
   @UseGuards(JwtAuthGuard)
-  @Get()
+  @Get('long')
   async getUserHostGameInfo(@Response() res, @Request() req) {
     try {
       const userIdx = req.user.user_idx;
-      const game = await this.gameService.getUserGame(userIdx);
+      const game = await this.gameService.getUseGameShortInfo(userIdx);
+      if (game === null) throw new Error();
       res.status(200).send(game);
     } catch (error) {
-      res.status(401).send('game 정보가 없습니다. ');
+      res.status(200).send('game 정보가 없습니다.');
+    }
+  }
+
+  // 현재 내가 참가하고 있는 게임의 정보 얻기
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getUserHostGameShortInfo(@Response() res, @Request() req) {
+    try {
+      const userIdx = req.user.user_idx;
+      const game = await this.gameService.getUseGameShortInfo(userIdx);
+      if (game === null) throw new Error();
+      res.status(200).send(game);
+    } catch (error) {
+      res.status(200).send(null);
     }
   }
 }

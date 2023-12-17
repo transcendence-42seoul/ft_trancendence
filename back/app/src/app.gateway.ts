@@ -69,9 +69,7 @@ export class appGateway
         nickname: user.nickname,
       };
     });
-
     const onlineUserList = await Promise.all(onlineUserListPromises);
-
     this.server.emit('onlineUsers', onlineUserList);
   }
 
@@ -81,7 +79,10 @@ export class appGateway
     const userIdx = userData.user_idx;
     onlineUsers[userIdx] = socket;
     try {
-      await this.userService.updateStatus(userIdx, UserStatus.ONLINE);
+      const game = await this.gameService.getUseGameShortInfo(userIdx);
+      if (game)
+        await this.userService.updateStatus(userIdx, UserStatus.PLAYING);
+      else await this.userService.updateStatus(userIdx, UserStatus.ONLINE);
     } catch (error) {
       this.logger.error(`${userIdx}의 offline 업데이트 실패`);
     }
@@ -108,7 +109,6 @@ export class appGateway
     });
 
     const onlineUserList = await Promise.all(onlineUserListPromises);
-
     this.server.emit('onlineUsers', onlineUserList);
   }
 
@@ -327,16 +327,28 @@ export class appGateway
 
       await this.alarmService.deleteAlarm(notificationIdx);
 
-      const alarms = await this.alarmService.getAlarms(requestedIdx);
-      const alarmDtos = alarms.map((alarm) => {
-        AlarmDto.fromEntity(alarm);
+      const requestAlarm = await this.alarmService.getAlarms(requestedIdx);
+      const requestAlarmDtos = requestAlarm.map((alarm) => {
+        return AlarmDto.entityToDto(alarm);
       });
 
       if (onlineUsers[requestedIdx].id) {
         this.server
           .to(onlineUsers[requestedIdx].id)
-          .emit('notificationList', alarmDtos);
+          .emit('notificationList', requestAlarmDtos);
       }
+
+      const senderAlarm = await this.alarmService.getAlarms(notification.sender_idx);
+      const senderAlarmDtos = senderAlarm.map((alarm) => {
+        return AlarmDto.entityToDto(alarm);
+      });
+
+      if (onlineUsers[notification.sender_idx]?.id) {
+        this.server
+          .to(onlineUsers[notification.sender_idx].id)
+          .emit('notificationList', senderAlarmDtos);
+      }
+
 
       const requestedFriendList =
         await this.friendService.getFriendList(requestedIdx);
@@ -402,10 +414,10 @@ export class appGateway
 
       const alarms = await this.alarmService.getAlarms(requestedIdx);
       const alarmDtos = alarms.map((alarm) => {
-        AlarmDto.fromEntity(alarm);
+        return AlarmDto.entityToDto(alarm);
       });
 
-      if (onlineUsers[requestedIdx].id) {
+      if (onlineUsers[requestedIdx]?.id) {
         this.server
           .to(onlineUsers[requestedIdx].id)
           .emit('notificationList', alarmDtos);
@@ -435,16 +447,16 @@ export class appGateway
       };
     });
 
-    if (onlineUsers[userIdx].id) {
+    if (onlineUsers[userIdx]?.id) {
       this.server
         .to(onlineUsers[userIdx].id)
         .emit('updateFriendList', friendDtos);
 
       this.server
-        .to(onlineUsers[userIdx].id)
+        .to(onlineUsers[userIdx]?.id)
         .emit('receiveFriendUsers', friendDtos);
     }
-    if (onlineUsers[friendIdx].id) {
+    if (onlineUsers[friendIdx]?.id) {
       this.server
         .to(onlineUsers[friendIdx].id)
         .emit('updateFriendList', friendDtos);
@@ -528,7 +540,7 @@ export class appGateway
 
       const alarms = await this.alarmService.getAlarms(userIdx);
       const alarmDtos = alarms.map((alarm) => {
-        AlarmDto.fromEntity(alarm);
+        return AlarmDto.entityToDto(alarm);
       });
 
       if (onlineUsers[userIdx].id) {

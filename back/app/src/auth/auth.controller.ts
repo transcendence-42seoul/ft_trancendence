@@ -31,7 +31,7 @@ export class AuthController {
   @Get('oauth/42/authorize')
   async loginWith42() {
     const clientId = process.env.FORTYTWO_CLIENT_ID;
-    const redirectUrl = `http://localhost:3000/auth/oauth/42/callback`;
+    const redirectUrl = `${process.env.VITE_SERVER_URL}/auth/oauth/42/callback`;
     const url = `https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}&response_type=code`;
     return { url };
   }
@@ -58,9 +58,9 @@ export class AuthController {
 
       if (created == false) {
         if (user.tfa_enabled)
-          res.redirect('http://localhost:5173/authentication');
-        else res.redirect('http://localhost:5173/main');
-      } else res.redirect('http://localhost:5173/avatar-setting');
+          res.redirect(`${process.env.FRONT_SERVER_URL}/authentication`);
+        else res.redirect(`${process.env.FRONT_SERVER_URL}/main`);
+      } else res.redirect(`${process.env.FRONT_SERVER_URL}/avatar-setting`);
     } catch (error) {
       res.status(500).send('Internal Server Error');
     }

@@ -43,7 +43,7 @@ const GameTable = (props: IGameTable) => {
           </tr>
         </thead>
         <tbody>
-          {histories.map((history) => {
+          {histories?.map((history) => {
             if (props.type === 'ladder' && history.game_type > 2) return null;
             if (props.type === 'challenge' && history.game_type <= 2)
               return null;

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import axios from 'axios';
 import { getCookie } from '../common/cookie/cookie';
 
-const defaultAvatar = 'src/assets/logo.jpg'; // 기본 프로필 이미지 경로
+const defaultAvatar = 'src/assets/transcendence_owner.jpg'; // 기본 프로필 이미지 경로
 
 function AvatarSetting() {
   const token = getCookie('token');
@@ -45,9 +45,9 @@ function AvatarSetting() {
     onClose();
   };
 
-  const updateNickname = () => {
+  const updateNickname = async () => {
     try {
-      axios.patch(
+      await axios.patch(
         `${import.meta.env.VITE_SERVER_URL}/users/${userIdx}/nickname`,
         { nickname: nickname },
         {
@@ -56,6 +56,7 @@ function AvatarSetting() {
           },
         },
       );
+      navigate('/main');
     } catch (error) {
       console.log(error);
     }
@@ -63,7 +64,6 @@ function AvatarSetting() {
 
   const handleCompleteProfileSetup = () => {
     updateNickname();
-    navigate('/main');
   };
 
   const handleCheckNickname = () => {

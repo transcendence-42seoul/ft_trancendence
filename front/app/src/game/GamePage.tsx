@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import GameReadyPage from './ready/GameReadyPage';
+import GameReadyPage, { IGame } from './ready/GameReadyPage';
 import GamePlayPage from './play/pong/GamePlayPage';
-import { useRecoilState } from 'recoil';
-import { GameAtom } from '../recoil/gameAtom';
 import axios from 'axios';
 import { getCookie } from '../common/cookie/cookie';
 import {
@@ -11,6 +9,8 @@ import {
   gameSocketConnect,
   gameSocketDisconnect,
 } from './socket/game.socket';
+import { Center, Spinner } from '@chakra-ui/react';
+import { appSocket } from '../common/socket/app.socket';
 
 export enum UserStatus {
   ONLINE = 'ONLINE',
@@ -19,8 +19,8 @@ export enum UserStatus {
 }
 
 const GamePage = () => {
-  const [userStatus, setUserStatus] = useState<UserStatus>(UserStatus.ONLINE);
-  const [gameData, setGameData] = useRecoilState(GameAtom);
+  const [userStatus, setUserStatus] = useState<UserStatus>(UserStatus.OFFLINE);
+  const [gameData, setGameData] = useState<IGame | null>(null);
 
   const [myId, setMyId] = useState<string>('');
   const navigation = useNavigate();
@@ -50,11 +50,10 @@ const GamePage = () => {
             },
           },
         );
-        setUserStatus(response.data.__game_guest__.status);
+        if (response.data) setUserStatus(UserStatus.PLAYING);
         setGameData(response.data);
       } catch (error) {
         navigation('/main');
-        console.log(error);
       }
     };
 
@@ -78,20 +77,25 @@ const GamePage = () => {
     return () => {
       gameSocket.off('error');
       gameSocket.off('disconnect');
-      gameSocket.off('getGameInfo');
       gameSocketDisconnect();
     };
   }, []);
 
   return (
     <>
-      {userStatus === UserStatus.PLAYING ? (
-        <GamePlayPage myId={myId} />
+      {userStatus === UserStatus.PLAYING && gameData ? (
+        <GamePlayPage myId={myId} gameData={gameData} />
       ) : (
-        <GameReadyPage
-          gameMode={gameData.game_mode}
-          setUserStatus={setUserStatus}
-        />
+        <div className="w-full h-full flex justify-center items-center">
+          <Spinner
+            className="flex justify-center"
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="blue.500"
+            size="xl"
+          />
+        </div>
       )}
     </>
   );

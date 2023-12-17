@@ -27,8 +27,6 @@ services:
       - "3000"
     networks:
       - net-transcendence
-    volumes:
-      - vol-profiles:/app/profiles
     depends_on:
       - srv-postgres
     env_file:
@@ -40,12 +38,8 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile
-    volumes:
-      - vol-react_app:/app/dist
     ports:
       - "5173:5173"
-    # expose:
-    #   - "5173"
     networks:
       - net-transcendence
     env_file:
@@ -59,22 +53,3 @@ networks:
 volumes:
   vol-postgres:
     name: postgres
-
-  vol-react_app:
-    name: react_app
-
-  vol-images:
-    name: images
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/share/images
-
-  vol-profiles:
-    name: profiles
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/share/profiles

@@ -220,7 +220,7 @@ function SettingPage() {
 
   const updateTfaEnabled = async (tfa_enabled: boolean) => {
     try {
-      await axios.patch(
+      const response = await axios.patch(
         `${import.meta.env.VITE_SERVER_URL}/users/${userIdx}/tfa-enabled`,
         { tfa_enabled: tfa_enabled },
         {
@@ -253,6 +253,8 @@ function SettingPage() {
     appSocket.emit('logout');
     appSocket.disconnect();
     Cookies.remove('token');
+    localStorage.clear();
+    sessionStorage.clear();
     navigate('/login');
     onCloseLogoutModal();
   };

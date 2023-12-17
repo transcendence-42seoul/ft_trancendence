@@ -142,7 +142,6 @@ function FriendListPage() {
   };
 
   const handleReceiveFriendUsers = (friendUsers: FriendUser[]) => {
-    console.log('handleReceiveFriend', friendUsers);
     setFriendUsers(friendUsers);
   };
 

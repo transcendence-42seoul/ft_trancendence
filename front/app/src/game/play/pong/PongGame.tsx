@@ -51,6 +51,7 @@ interface PongGameProps {
   player: 'Host' | 'Guest';
   setGameEndState: React.Dispatch<React.SetStateAction<boolean>>;
   setWinner: React.Dispatch<React.SetStateAction<'Host' | 'Guest'>>;
+  roomId: string;
 }
 
 const PongGame = (props: PongGameProps) => {
@@ -214,7 +215,7 @@ const PongGame = (props: PongGameProps) => {
     }
   };
 
-  const roomId = useRecoilValue(GameRoomIdSelector);
+  const roomId = props.roomId;
 
   //게임 이벤트 등록
   useEffect(() => {

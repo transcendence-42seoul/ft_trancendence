@@ -150,13 +150,34 @@ export class GameService {
       ],
       relations: ['game_host', 'game_guest'],
     });
+
     if (game) return game;
     return null;
   }
 
-  async getUserGuestGameInfo(userId: string) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-
-    return user.guest;
+  async getUseGameShortInfo(userIdx: number) {
+    const game = await this.gameRepository
+      .createQueryBuilder('game')
+      .where('game_host.idx = :userIdx OR game_guest.idx = :userIdx', {
+        userIdx,
+      })
+      .leftJoinAndSelect('game.game_host', 'game_host')
+      .leftJoinAndSelect('game.game_guest', 'game_guest')
+      .leftJoinAndSelect('game_host.record', 'host_record') // User의 record 정보만 선택
+      .leftJoinAndSelect('game_host.ranking', 'host_ranking') // User의 ranking 정보만 선택
+      .leftJoinAndSelect('game_guest.record', 'guest_record') // User의 record 정보만 선택
+      .leftJoinAndSelect('game_guest.ranking', 'guest_ranking') // User의 ranking 정보만 선택
+      .leftJoinAndSelect('game_host.avatar', 'host_avatar')
+      .leftJoinAndSelect('game_guest.avatar', 'guest_avatar')
+      .addSelect([
+        'host_record',
+        'host_ranking',
+        'guest_record',
+        'guest_ranking',
+        'host_avatar',
+        'guest_avatar',
+      ]) // 필요한 User의 정보만 선택
+      .getOne();
+    return game;
   }
 }

@@ -36,10 +36,11 @@ export class AlarmDto {
     return alarmDto;
   }
 
-  static fromEntity(alarm: Alarm): AlarmDto {
+  static entityToDto(alarm: Alarm): AlarmDto {
     const alarmDto = new AlarmDto();
     alarmDto.idx = alarm.idx;
     alarmDto.sender_idx = alarm.sender_idx;
+    alarmDto.room_idx = alarm.room_idx;
     alarmDto.content = alarm.content;
     alarmDto.type = alarm.type;
 
