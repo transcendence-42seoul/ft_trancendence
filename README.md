@@ -34,23 +34,26 @@ makefile을 실행 후, localhost:5173으로 접속한다.
 
 ## DB 설계
 
-![Untitled](%E1%84%89%E1%85%B5%E1%86%AF%E1%84%89%E1%85%B5%E1%84%80%E1%85%A1%E1%86%AB%20Pong%20%E1%84%86%E1%85%B5%E1%84%82%E1%85%B5%20%E1%84%80%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%B7%20a4c95d72e4c94773a7eb2b4c804545e3/Untitled.png)
+![Untitled](https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/e2fef9db-68ab-4890-a1bf-388e250e1119)
+
 
 ## UI/UX 기본 설계
 
-![Untitled](%E1%84%89%E1%85%B5%E1%86%AF%E1%84%89%E1%85%B5%E1%84%80%E1%85%A1%E1%86%AB%20Pong%20%E1%84%86%E1%85%B5%E1%84%82%E1%85%B5%20%E1%84%80%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%B7%20a4c95d72e4c94773a7eb2b4c804545e3/Untitled%201.png)
+![Untitled (1)](https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/9962e643-4749-49c0-86c7-b4c00a5065a3)
 
 ## 미리보기
 
 ---
 
-![Untitled](%E1%84%89%E1%85%B5%E1%86%AF%E1%84%89%E1%85%B5%E1%84%80%E1%85%A1%E1%86%AB%20Pong%20%E1%84%86%E1%85%B5%E1%84%82%E1%85%B5%20%E1%84%80%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%B7%20a4c95d72e4c94773a7eb2b4c804545e3/Untitled%202.png)
+<img width="1216" alt="Untitled (2)" src="https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/0c10fbcd-9402-4f22-a83b-de7578407423">
 
-![Untitled](%E1%84%89%E1%85%B5%E1%86%AF%E1%84%89%E1%85%B5%E1%84%80%E1%85%A1%E1%86%AB%20Pong%20%E1%84%86%E1%85%B5%E1%84%82%E1%85%B5%20%E1%84%80%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%B7%20a4c95d72e4c94773a7eb2b4c804545e3/Untitled%203.png)
+<img width="1225" alt="Untitled (5)" src="https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/22e9a93a-6152-4d0f-b925-d0e228bffcd1">
 
-![Untitled](%E1%84%89%E1%85%B5%E1%86%AF%E1%84%89%E1%85%B5%E1%84%80%E1%85%A1%E1%86%AB%20Pong%20%E1%84%86%E1%85%B5%E1%84%82%E1%85%B5%20%E1%84%80%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%B7%20a4c95d72e4c94773a7eb2b4c804545e3/Untitled%204.png)
 
-![Untitled](%E1%84%89%E1%85%B5%E1%86%AF%E1%84%89%E1%85%B5%E1%84%80%E1%85%A1%E1%86%AB%20Pong%20%E1%84%86%E1%85%B5%E1%84%82%E1%85%B5%20%E1%84%80%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%B7%20a4c95d72e4c94773a7eb2b4c804545e3/Untitled%205.png)
+<img width="1154" alt="Untitled (3)" src="https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/fed51886-56f1-4332-867c-242f5f916f01">
+
+<img width="1224" alt="Untitled (4)" src="https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/c762d862-20a3-483d-a081-a8e3a4f7671e">
+
 
 # 기술 스택
 
