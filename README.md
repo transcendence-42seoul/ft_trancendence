@@ -1,14 +1,23 @@
 # 실시간 Pong 미니 게임
 
-한줄 소개: 실시간으로 친구들과 pong을 즐겨보자
-진행 기간: 2023년 10월 11일
+한줄 소개: 실시간으로 친구들과 pong 게임을 즐겨보자
+</br>
+진행 기간: 2023년 10월 11일 ~ 2023년 12월 12일 (지속적으로 리펙토링 중)
+</br>
 Skills: Nest.js, Node.js, React.js, Tailwind, Typescript
+</br>
 팀구성: 풀스택 5명
+</br>
+</br>
 
 # **About**
 
 
 - 실시간으로 Pong 미니 게임을 다른 유저들과 즐겨보자.
+
+
+</br>
+</br>
 
 # 실행방법
 
@@ -20,10 +29,11 @@ docker가 설치되어있다고 가정 후,
 make
 ```
 makefile을 실행 후, localhost:5173으로 접속한다.
+</br>
+</br>
 
 # 프로젝트 기능
 
----
 
 - 채팅 룸 생성
 - 채팅 ban 기능
@@ -40,6 +50,8 @@ makefile을 실행 후, localhost:5173으로 접속한다.
 ## UI/UX 기본 설계
 
 ![Untitled (1)](https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/9962e643-4749-49c0-86c7-b4c00a5065a3)
+</br>
+</br>
 
 ## 미리보기
 
@@ -54,10 +66,10 @@ makefile을 실행 후, localhost:5173으로 접속한다.
 
 <img width="1224" alt="Untitled (4)" src="https://github.com/transcendence-42seoul/ft_transcendence/assets/67690205/c762d862-20a3-483d-a081-a8e3a4f7671e">
 
+</br>
+</br>
 
 # 기술 스택
-
----
 
 `**Back-End**`
 
