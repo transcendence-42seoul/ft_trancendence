@@ -28,8 +28,10 @@ type GameStoreType = {
 
 const GameStore: GameStoreType = {};
 
-const NormalWaitingQueue = [];
-const HardWaitingQueue = [];
+export type GameQueueTuple = [Socket, number]
+
+const NormalWaitingQueue : GameQueueTuple[] = [];
+const HardWaitingQueue : GameQueueTuple[] = [];
 
 interface LadderWaitingQueueType {
   mode: 'normal' | 'hard';
@@ -97,9 +99,7 @@ export class GameGateway
   }
 
   async handleConnection(@ConnectedSocket() socket: Socket) {
-    const query_token = socket.handshake.query.token;
-    const auth_token = socket.handshake.auth.token;
-    const token = auth_token || query_token;
+    const token =  this.userService.parseSocketHeaderCookieToken(socket.handshake.headers.cookie);
     try {
       const data = this.authService.parsingJwtData(token as string);
       if (!data) {
@@ -136,6 +136,16 @@ export class GameGateway
 
       const requester = await this.userService.getIsInclueGame(data.user_idx);
       if (requester.include) {
+        socket.emit('error');
+        return;
+      }
+
+      // 이미 normal of hard queue에 등록되어있는 경우 에러처리
+      if (this.gameService.checkAlreadyJoinQueue(NormalWaitingQueue, data.user_idx)){
+        socket.emit('error');
+        return;
+      }
+      if (this.gameService.checkAlreadyJoinQueue(HardWaitingQueue, data.user_idx)){
         socket.emit('error');
         return;
       }
@@ -329,7 +339,7 @@ export class GameGateway
         `create game ${hostData.idx}, ${guestData.idx} in ${game.room_id}`,
       );
     } catch (error) {
-      throw Error("can't create game");
+      this.logger.error("can't create game");
     }
   }
 
