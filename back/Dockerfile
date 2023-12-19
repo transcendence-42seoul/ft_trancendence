@@ -6,10 +6,10 @@ COPY app/package-lock.json .
 COPY app/package.json .
 
 # update npm environment
-RUN npm install -g npm@8.19.2
+# RUN npm install -g npm@8.19.2
 # package.json update
-RUN npm install -g npm-check-updates
-RUN ncu -u
+# RUN npm install -g npm-check-updates
+# RUN ncu -u
 
 EXPOSE 3000
 
