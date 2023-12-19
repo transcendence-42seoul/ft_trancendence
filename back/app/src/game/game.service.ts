@@ -10,6 +10,7 @@ import { CreateGameDto } from './dto/create.game.dto';
 import { RecordService } from 'src/record/record.service';
 import { Logger } from '@nestjs/common';
 import { RankingService } from 'src/ranking/ranking.service';
+import { GameQueueTuple } from './game.gateway';
 
 @Injectable()
 export class GameService {
@@ -179,5 +180,14 @@ export class GameService {
       ]) // 필요한 User의 정보만 선택
       .getOne();
     return game;
+  }
+
+  checkAlreadyJoinQueue(queue : GameQueueTuple[], user_idx : number){
+    const idx = queue.findIndex((element) => {
+      return element[1] === user_idx;
+    });
+    if (idx > -1)
+      return true;
+    return false;
   }
 }

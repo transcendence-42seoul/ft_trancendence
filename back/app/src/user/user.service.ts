@@ -218,13 +218,29 @@ export class UserService {
 
     return onlineUsers;
   }
+
+  parseSocketHeaderCookieToken(header: string){
+    // 쿠키 문자열 가져오기
+    let cookieString = header;
+
+    // 쿠키 문자열을 ; 기준으로 나누기
+    let cookieArray = cookieString.split(";");
+
+    // 토큰 이름 찾기 (예를 들어, "token"이라고 가정)
+    let tokenName = "token";
+    let tokenValue = '';
+
+    // 쿠키 배열을 순회하며 토큰 찾기
+    for (let i = 0; i < cookieArray.length; i++) {
+      let cookie = cookieArray[i].trim(); // 앞뒤 공백 제거
+
+      // 토큰 이름이 있는지 확인
+      if (cookie.startsWith(`${tokenName}=`)) {
+          // 토큰 값을 추출
+          tokenValue = cookie.split("=")[1];
+          break;
+      }
+    }
+    return tokenValue;
+  }
 }
-
-//  // 챌린지 수락자 수락 == 게임 생성 + 챌린지 도전자에게 게임 시작 알림 + 챌린지 수락자에게 게임 시작 알림 + 게임 생성하고 game 정보 뿌리기
-//  @SubscribeMessage('requestedAcceptChallengeGame')
-//  async acceptChallengeGame(
-//    @MessageBody() body: { requesterId: string; requestedId: string },
-//    @ConnectedSocket() socket: Socket,
-//  ) {}
-
-//  // 챌릭지 도전자 취소
