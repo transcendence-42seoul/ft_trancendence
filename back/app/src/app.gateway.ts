@@ -62,21 +62,33 @@ export class appGateway
     }
     this.logger.log('disconnected : ' + socket.id + ' in appGateway' + userIdx);
 
-    const onlineUserListPromises = Object.keys(onlineUsers).map(async (key) => {
-      const user = await this.userService.findByIdx(parseInt(key));
-      return {
-        idx: parseInt(key),
-        nickname: user.nickname,
-      };
-    });
-    const onlineUserList = await Promise.all(onlineUserListPromises);
-    this.server.emit('onlineUsers', onlineUserList);
+    try{
+      const onlineUserListPromises = Object.keys(onlineUsers).map(async (key) => {
+        const user = await this.userService.findByIdx(parseInt(key));
+        return {
+          idx: parseInt(key),
+          nickname: user.nickname,
+        };
+      });
+      const onlineUserList = await Promise.all(onlineUserListPromises);
+      this.server.emit('onlineUsers', onlineUserList);
+    }catch(error){
+      this.logger.error(error.message);
+    }
   }
 
   async handleConnection(@ConnectedSocket() socket: Socket) {
     const token = socket.handshake.auth.token;
     const userData = await this.authService.parsingJwtData(token);
     const userIdx = userData.user_idx;
+    try {
+      await this.userService.findByIdx(parseInt(userIdx));
+    } catch(error){
+      socket.emit('invalid_user');
+      this.logger.error(error.message);
+      socket.disconnect();
+      return ;
+    }
     onlineUsers[userIdx] = socket;
     try {
       const game = await this.gameService.getUseGameShortInfo(userIdx);
@@ -197,14 +209,6 @@ export class appGateway
     const userIdx = userData.user_idx;
     return userIdx;
   }
-  // @SubscribeMessage('login')
-  // async login(@ConnectedSocket() socket: Socket) {
-  //   const userIdx = socket.data.userIdx;
-  //   const user = await this.userService.findByIdx(userIdx);
-  //   if (user) {
-  //     await this.userService.updateStatus(userIdx, UserStatus.ONLINE);
-  //   }
-  // }
 
   @SubscribeMessage('logout')
   async logout(@ConnectedSocket() socket: Socket) {

@@ -15,6 +15,7 @@ import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { getCookie, removeCookie } from './common/cookie/cookie';
 import {
+  appSocket,
   appSocketConnect,
   appSocketDisconnect,
 } from './common/socket/app.socket';
@@ -56,6 +57,11 @@ function App() {
     if (currentPath === '/login' || currentPath === '/welcome') {
       navigate('/main');
     }
+    appSocket.on('invalid_user', ()=>{
+      console.error('invalid_user');
+      removeCookie('token');
+      navigate('/login');
+    })
     appSocketConnect();
   };
 
