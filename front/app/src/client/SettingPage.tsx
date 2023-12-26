@@ -26,6 +26,9 @@ interface TfaEnableModalProps {
   isOpen: boolean;
   onClose: () => void;
   onTfaEnableConfirm: () => void;
+  onFetchQRCode: () => void;
+  showQrCode: boolean;
+  qrCodeUrl: string;
 }
 
 interface TfaDisavleModalProps {
@@ -47,22 +50,45 @@ interface WithdrawalConfirmationModalProps {
 }
 
 function TfaEnableModal(props: TfaEnableModalProps) {
-  const { isOpen, onClose, onTfaEnableConfirm } = props;
+  const {
+    isOpen,
+    onClose,
+    onTfaEnableConfirm,
+    onFetchQRCode,
+    showQrCode,
+    qrCodeUrl,
+  } = props;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>2차 인증 확인</ModalHeader>
+        <ModalHeader>
+          {showQrCode ? 'QR 코드 스캔' : '2차 인증 활성화'}
+        </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>2차 인증을 활성화 하시겠습니까?</ModalBody>
+        <ModalBody>
+          {showQrCode ? (
+            <img src={qrCodeUrl} alt="QR Code" />
+          ) : (
+            '2차 인증을 활성화 하시겠습니까?'
+          )}
+        </ModalBody>
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={onTfaEnableConfirm}>
-            네
-          </Button>
-          <Button variant="ghost" onClick={onClose}>
-            취소
-          </Button>
+          {showQrCode ? (
+            <Button colorScheme="blue" mr={3} onClick={onTfaEnableConfirm}>
+              확인
+            </Button>
+          ) : (
+            <div>
+              <Button colorScheme="blue" mr={3} onClick={onFetchQRCode}>
+                네
+              </Button>
+              <Button variant="ghost" onClick={onClose}>
+                취소
+              </Button>
+            </div>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>
@@ -76,7 +102,7 @@ function TfaDisableModal(props: TfaDisavleModalProps) {
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>2차 인증 확인</ModalHeader>
+        <ModalHeader>2차 인증 활성화 해제</ModalHeader>
         <ModalCloseButton />
         <ModalBody>2차 인증 활성화를 해제하시겠습니까?</ModalBody>
         <ModalFooter>
@@ -150,6 +176,10 @@ function SettingPage() {
 
   const [tfaEnabled, setTfaEnabled] = useState<boolean>(false);
 
+  const [showQrCode, setShowQrCode] = useState(false);
+
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+
   const {
     isOpen: isTfaModalOpen,
     onOpen: onOpenTfaModal,
@@ -190,6 +220,27 @@ function SettingPage() {
     setTfaEnabled(response.data.tfa_enabled);
   };
 
+  const fetchQRCode = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/auth/tfa/${userIdx}/switch`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ tfa_enabled: true }),
+        },
+      );
+
+      const data = await response.json();
+      setQrCodeUrl(data.qrCode);
+    } catch (error) {
+      console.error('Error fetching QR code:', error);
+    }
+  };
+
   useEffect(() => {
     fetchUserIdx();
   }, []);
@@ -219,16 +270,17 @@ function SettingPage() {
     onOpenWithdrawalModal();
   };
 
-  const updateTfaEnabled = async (tfa_enabled: boolean) => {
+  const updateTfaDisabled = async () => {
     try {
-      const response = await axios.patch(
-        `${import.meta.env.VITE_SERVER_URL}/users/${userIdx}/tfa-enabled`,
-        { tfa_enabled: tfa_enabled },
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/auth/tfa/${userIdx}/switch`,
         {
+          method: 'PATCH',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ tfa_enabled: false }),
         },
       );
     } catch (error) {
@@ -236,16 +288,18 @@ function SettingPage() {
     }
   };
 
+  const handleFetchQRCode = async () => {
+    await fetchQRCode();
+    setShowQrCode(true);
+  };
+
   const handleTfaEnableConfirm = async () => {
-    // add socket logic
-    await updateTfaEnabled(true);
     setTfaEnabled(true);
     onCloseTfaModal();
   };
 
   const handleTfaDisableConfirm = async () => {
-    // add socket logic
-    await updateTfaEnabled(false);
+    await updateTfaDisabled();
     setTfaEnabled(false);
     onCloseTfaModal();
   };
@@ -352,6 +406,9 @@ function SettingPage() {
           isOpen={isTfaModalOpen}
           onClose={onCloseTfaModal}
           onTfaEnableConfirm={handleTfaEnableConfirm}
+          onFetchQRCode={handleFetchQRCode}
+          showQrCode={showQrCode}
+          qrCodeUrl={qrCodeUrl}
         />
       )}
 

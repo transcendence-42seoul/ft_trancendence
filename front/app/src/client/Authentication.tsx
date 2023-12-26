@@ -10,8 +10,6 @@ function AuthenticationPage() {
 
   const navigate = useNavigate();
   const [inputs, setInputs] = useState(Array(6).fill(''));
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
-  const [loading, setLoading] = useState(false);
   const inputRefs = useRef(new Array(6).fill(null));
 
   const tfaCode = inputs.join('');
@@ -32,33 +30,6 @@ function AuthenticationPage() {
     }
   };
 
-  const fetchQRCode = async () => {
-    if (!qrCodeUrl) {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_SERVER_URL}/auth/tfa/${userIdx}/switch`,
-          {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch QR code');
-        }
-        const data = await response.json();
-        setQrCodeUrl(data.qrCode);
-      } catch (error) {
-        console.error('Error fetching QR code:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
   const verifyTFA = async () => {
     if (inputs.every((input) => input.length === 1)) {
       try {
@@ -72,7 +43,7 @@ function AuthenticationPage() {
             },
           },
         );
-        navigate('/main'); // 이동할 페이지 수정하기
+        navigate('/main');
       } catch (error: any) {
         if (error.response) {
           console.error('Error Response:', error.response.data);
@@ -88,13 +59,6 @@ function AuthenticationPage() {
   useEffect(() => {
     fetchUserIdx();
   }, []);
-
-  // Fetch QR code on component mount
-  useEffect(() => {
-    if (userIdx > 0) {
-      fetchQRCode();
-    }
-  }, [userIdx]);
 
   // verify with tfa code
   useEffect(() => {
@@ -136,17 +100,13 @@ function AuthenticationPage() {
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center">
       <div className="flex flex-col items-center">
-        {/* QR code */}
-        <div className="p-20 bg-gray-200 rounded-lg">
-          {loading ? (
-            <p>Loading QR Code</p> // 로딩 중일 때 문구 표시
-          ) : qrCodeUrl ? (
-            <img src={qrCodeUrl} alt="QR Code" />
-          ) : null}{' '}
-          {/* // QR 코드 URL이 있을 때 이미지 표시, QR 코드 URL이 없고 로딩 중도 아닐 때는 아무것도 표시하지 않음 */}
+        {/* 안내 */}
+        <div className="p-10 bg-gray-200 rounded-lg">
+          <div className="text-2xl font-bold">OTP 인증</div>
+          <p>앱에 표시된 6자리 코드를 입력하세요.</p>
         </div>
         {/* 인증번호 입력 */}
-        <div className="mt-20 flex space-x-3">
+        <div className="mt-10 flex space-x-3">
           {inputs.map((input, index) => (
             <input
               key={index}

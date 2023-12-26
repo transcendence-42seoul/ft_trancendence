@@ -112,11 +112,14 @@ export class AuthController {
   }
 
   @Patch('tfa/:idx/switch')
-  async switchTFA(@Param('idx', ParseIntPipe) idx: number): Promise<any> {
+  async switchTFA(
+    @Param('idx', ParseIntPipe) idx: number,
+    @Body('tfa_enabled') tfa_enabled: boolean,
+  ): Promise<any> {
     try {
-      const user = await this.userService.findByIdx(idx);
+      await this.userService.findByIdx(idx);
 
-      if (user.tfa_enabled == false) {
+      if (tfa_enabled == false) {
         await this.userService.updateTFA(idx, false, null);
         return { message: 'TFA is successfully disabled' };
       } else {
